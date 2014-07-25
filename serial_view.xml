@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<openerp>
+    <data>
+    
+    		 <record model="ir.ui.view" id="inherit_view_production_lot_form">
+                <field name="name">inherit.view.production.lot.form</field>
+                <field name="model">stock.production.lot</field>
+                <field name="inherit_id" ref="stock.view_production_lot_form"/>
+                <field name="arch" type="xml">
+                        <field name="color_id" position="after">
+                        	<field name="availability"/>
+                        </field>
+
+                </field>
+            </record>
+    
+    		<record model="ir.ui.view" id="inherit_qishu_stock_product_lot_tree_view">
+                <field name="name">inherit.qishu.stock.product.lot.tree.view</field>
+                <field name="model">stock.production.lot</field>
+                <field name="type">tree</field>
+                <field name="inherit_id" ref="qishu.view_qishu_stock_production_lot_tree"/>
+                <field name="arch" type="xml">
+                        <field name="status" position="after">
+                        	<field name="availability"/>
+                        </field>
+                </field>
+            </record>
+    
+    </data>
+</openerp>
