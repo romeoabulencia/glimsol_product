@@ -19,6 +19,83 @@
 from openerp.osv import fields, osv
 from openerp import netsvc
 
+class stock_move(osv.osv):
+    _inherit="stock.move"
+    _name="stock.move"
+    
+    _columns={
+              'parent_id':fields.many2one('stock.move', 'Parent', required=False),
+#             'line_number':fields.char('Line number',size=64),
+
+              }
+    def create(self, cr, uid, data, context=None):
+        result = super(stock_move, self).create(cr, uid, data, context=context)
+        #check for product supply method if bundled
+        move_obj = self.browse(cr,uid,result)
+        product_supply_method = move_obj.product_id.supply_method
+        if product_supply_method == 'bundle':
+            #loop for product components
+            for item in move_obj.product_id.item_ids:
+                temp_val = data.copy()
+                temp_val['product_id']=item.item_id.id
+                temp_val['product_qty']=data['product_qty']*item.qty_uom
+                temp_val['parent_id']=result
+                self.create(cr,uid,temp_val,context=context)
+        return result    
+    
+    def fetch_all_child(self,cr,uid,parent_id,result=None):
+        if not result:
+            result = []
+        temp_result = self.search(cr,uid,[('parent_id','=',parent_id)])
+        result.extend(temp_result)
+        for x in temp_result:
+            result.extend(self.fetch_all_child(cr, uid, parent_id, result))
+        return result
+    
+#     def write(self, cr, uid, ids, data, context=None):
+#         result = super(stock_move, self).write(cr, uid, ids, data, context=context)
+#         #if product_id is in data
+#         #check for product bundle supply method
+#         if not isinstance(ids,list):
+#             ids=[ids]
+#         for obj in self.browse(cr,uid,ids):
+#             product_supply_method = obj.product_id.supply_method
+#             #delete all stock move childs
+#             #fetch all child
+#             target_ids = self.fetch_all_child(cr,uid,obj.id)
+#             self.unlink(cr,uid,target_ids)
+#             if product_supply_method == 'bundle':
+#                 target_fields = ['product_uos_qty', 'date_expected', 'product_uom', 'product_uos', 'prodlot_id', 'product_qty', 'date', 'partner_id', 'product_id', 'name', 'location_id', 'parent_id', 'location_dest_id', 'tracking_id', 'product_packaging', 'type', 'picking_id']
+#                 val = self.read(cr,uid,obj.id,target_fields)
+#                 for item in obj.product_id.item_ids:
+#                     temp_val = val.copy()
+#                     temp_val['product_id']=item.item_id.id
+#                     temp_val['product_qty']=val['product_qty']*item.qty_uom
+#                     temp_val['parent_id']=result
+#                     self.create(cr,uid,temp_val,context=context)            
+#         return result    
+    
+    def unlink(self, cr, uid, ids, context=None):
+        temp_ids=ids
+        if not isinstance(temp_ids,list):
+            temp_ids = [temp_ids]
+        #remove child ids
+        for temp_id in temp_ids:
+            child_ids=self.fetch_all_child(cr, uid, temp_id, result)
+            self.unlink(cr,uid,child_ids,context=context)
+        return super(stock_move, self).unlink(cr, uid, ids, context=context)    
+    
+
+
+class stock_picking(osv.osv):
+    _name="stock.picking"
+    _inherit="stock.picking"
+    
+    def onchange_move_lines(self, cr, uid, ids, move_lines,context=None):
+        print "onchange_move_lines".upper()
+        
+        
+        return True
 
 class stock_partial_picking(osv.osv_memory):
     _name = "stock.partial.picking"
