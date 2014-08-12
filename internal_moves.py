@@ -25,6 +25,7 @@ class stock_move(osv.osv):
     
     _columns={
               'parent_id':fields.many2one('stock.move', 'Parent', required=False),
+              'child_ids':fields.one2many('stock.move','parent_id','Childs',required=False)
 #             'line_number':fields.char('Line number',size=64),
 
               }
