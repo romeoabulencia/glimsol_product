@@ -26,7 +26,7 @@
     'category': '',
     'description': """Glimsol Bundle Product Update""",
     'author': 'GLIMSOL',
-    'depends': ['sale','delivery','hr','qishu','product_bundle'],
+    'depends': ['stock','sale','delivery','hr','qishu','product_bundle'],
     'data': ['serial_view.xml','internal_moves_view.xml'],
     'demo': [],
     'test': [],

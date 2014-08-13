@@ -18,6 +18,9 @@
 
 from openerp.osv import fields, osv
 from openerp import netsvc
+import time
+from openerp.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
+
 
 class stock_move(osv.osv):
     _inherit="stock.move"
@@ -85,25 +88,15 @@ class stock_move(osv.osv):
             child_ids=self.fetch_all_child(cr, uid, temp_id, result)
             self.unlink(cr,uid,child_ids,context=context)
         return super(stock_move, self).unlink(cr, uid, ids, context=context)    
-    
 
-
-class stock_picking(osv.osv):
-    _name="stock.picking"
-    _inherit="stock.picking"
-    
-    def onchange_move_lines(self, cr, uid, ids, move_lines,context=None):
-        print "onchange_move_lines".upper()
-        
-        
-        return True
-
-class stock_partial_picking(osv.osv_memory):
-    _name = "stock.partial.picking"
+class glimsol_stock_partial_picking(osv.osv_memory):
     _inherit = "stock.partial.picking"
+    _name="stock.partial.picking"
+    
+
     def default_get(self, cr, uid, fields, context=None):
         if context is None: context = {}
-        res = super(stock_partial_picking, self).default_get(cr, uid, fields, context=context)
+        res = super(glimsol_stock_partial_picking, self).default_get(cr, uid, fields, context=context)
         picking_ids = context.get('active_ids', [])
         active_model = context.get('active_model')
 
@@ -116,33 +109,20 @@ class stock_partial_picking(osv.osv_memory):
             res.update(picking_id=picking_id)
         if 'move_ids' in fields:
             picking = self.pool.get('stock.picking').browse(cr, uid, picking_id, context=context)
-            moves = [self._partial_move_for(cr, uid, m) for m in picking.move_lines if m.state not in ('done','cancel')]
-            #explode bundled product on moves
-            res_moves=[]
-            for move in moves:
-                product_id= move['product_id']
-                product_bundle = self.pool.get('purchase.order').get_product_bundle_ids(cr,uid,product_id,context={'product_qty':move['quantity'],'mode':'recursive'})
-                if product_bundle:
-                    move_data={
-                               #'product_id':,
-                               #'product_uom':,
-                               'prodlot_id':move['prodlot_id'],
-                               'location_dest_id':move['location_dest_id'],
-                               'location_id':move['location_id'],
-                               'move_id':move['move_id'],
-                               #'quantity':,
-                               }
-                    for bundle in product_bundle:
-                        temp={'product_id':bundle['item_id'][0],
-                              'product_uom':bundle['uom_id'][0],
-                              'quantity':bundle['qty_uom'] * move['quantity'],
-                              }
-                        move_data.update(temp)
-                        res_moves.append(move_data.copy())
-                else:
-                    res_moves.append(move)
-                
-            res.update(move_ids=res_moves)
+
+            moves = [self._partial_move_for(cr, uid, m) for m in picking.move_lines if m.state not in ('done','cancel') and m.product_id.supply_method != 'bundle']
+            res.update(move_ids=moves)
         if 'date' in fields:
-            res.update
-        return res
+            res.update(date=time.strftime(DEFAULT_SERVER_DATETIME_FORMAT))
+        return res    
+        
+class stock_picking(osv.osv):
+    _inherit="stock.picking"
+    _name="stock.picking"
+
+    
+    def onchange_move_lines(self, cr, uid, ids, move_lines,context=None):
+        print "onchange_move_lines".upper()
+        
+        
+        return True

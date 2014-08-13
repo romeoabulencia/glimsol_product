@@ -13,7 +13,6 @@ class stock_move(osv.osv):
     def _check_prod_lot_id(self, cr, uid, ids): 
 
         for dict in self.read(cr,uid,ids,['prodlot_id','type']):
-            print "dict".upper(),dict
             if dict['prodlot_id'] and self.search(cr,uid,[('prodlot_id','=',dict['prodlot_id'][0]),('type','=',dict['type']),('id','!=',dict['id'])]):
                 return False
         return True
