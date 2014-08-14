@@ -58,15 +58,16 @@ class sale_order(osv.osv):
 
             date_planned = self._get_date_planned(cr, uid, order, line, order.date_order, context=context)
             
-            fake_line_ids = []
+#             fake_line_ids = []
+            fake_line_ids=[line]
             is_bundle = False
             
             if line.product_id:
-                if line.product_id.supply_method == 'bundle':
-                    fake_line_ids = filter(None, map(lambda x:x, line.product_id.item_ids))
-                    is_bundle = True
-                else:
-                    fake_line_ids.append(line)
+#                 if line.product_id.supply_method == 'bundle':
+#                     fake_line_ids = filter(None, map(lambda x:x, line.product_id.item_ids))
+#                     is_bundle = True
+#                 else:
+#                     fake_line_ids.append(line)
                 
                 for fake_line in fake_line_ids:
                     line_vals = {}
